@@ -24,8 +24,17 @@ RUN set -eux; \
 
 RUN mkdir -p /build \
   && cd /src \
-  && ver="$(git describe --tags --always --dirty 2>/dev/null || true)" \
-  && if [ -z "${ver}" ]; then ver="0.0.0-$(git rev-parse --short HEAD)"; fi \
+  && desc="$(git describe --tags --always 2>/dev/null || true)" \
+  && sha="$(git rev-parse --short HEAD)" \
+  && tag_part="${desc%%-[0-9]*-g*}" \
+  && if [ -n "${desc}" ] && [ "${desc}" != "${sha}" ]; then \
+       case "${tag_part}" in \
+         *+*) base="${tag_part%%+*}"; ver="${base}+${sha}" ;; \
+         *)   ver="${desc}" ;; \
+       esac; \
+     else \
+       ver="0.0.0+${sha}"; \
+     fi \
   && printf '%s' "${ver}" > /build/VERSION
 
 ENV CGO_ENABLED=1
@@ -45,7 +54,7 @@ COPY --from=builder /src/scripts/firecrackmanager.service /tmp/firecrackmanager.
 
 RUN set -eux; \
     VERSION_RAW="$(tr -d '\n\r' < /tmp/VERSION)"; \
-    VERSION="$(printf '%s' "${VERSION_RAW}" | sed 's/[\/[:space:]]/-/g' | sed -E 's/^([0-9a-f]{7,40}(-dirty)?)$/0.0.0+\1/')"; \
+    VERSION="$(printf '%s' "${VERSION_RAW}" | sed 's/[\/[:space:]]/-/g' | sed -E 's/^([0-9a-f]{7,40})$/0.0.0+\1/')"; \
     ARCH=amd64; \
     STAGE=/tmp/stage; \
     rm -rf "${STAGE}"; \
