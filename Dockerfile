@@ -12,15 +12,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ARG REPO_URL=https://github.com/ahostwin/firecrackmanager.git
 ARG GIT_DEPTH=100
 
+# Passed by Makefile from `git ls-remote … HEAD`; when it changes, this layer rebuilds while base image layers stay cached.
+ARG SOURCE_REV
+
 WORKDIR /src
 
 RUN set -eux; \
+    if [ -z "${SOURCE_REV}" ]; then echo "Dockerfile: SOURCE_REV build-arg is required (Makefile sets it via git ls-remote)" >&2; exit 1; fi; \
     rm -rf /src/* /src/.[!.]* /src/..?* 2>/dev/null || true; \
+    git init /src; \
+    cd /src; \
+    git remote add origin "${REPO_URL}"; \
     if [ "${GIT_DEPTH}" = "0" ]; then \
-      git clone -- "${REPO_URL}" /src; \
+      git fetch origin "${SOURCE_REV}"; \
     else \
-      git clone --depth "${GIT_DEPTH}" -- "${REPO_URL}" /src; \
-    fi
+      git fetch --depth "${GIT_DEPTH}" origin "${SOURCE_REV}"; \
+    fi; \
+    git checkout -q "${SOURCE_REV}"
 
 RUN mkdir -p /build \
   && cd /src \
