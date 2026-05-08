@@ -1,4 +1,8 @@
 /dist/
 /.specstory/
 /.cursor/
+
+# Editor / IDE
+.vscode/
+.cursorindexingignore
 .cursorindexignore
