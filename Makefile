@@ -15,7 +15,7 @@ SOURCE_REV ?= $(shell git ls-remote "$(REPO_URL)" HEAD 2>/dev/null | cut -f1)
 
 all: dist
 	@test -n "$(SOURCE_REV)" || (echo "SOURCE_REV is empty (git ls-remote failed?). Set SOURCE_REV=<full-sha> or fix REPO_URL/network." >&2; exit 1)
-	docker build --platform linux/amd64 \
+	DOCKER_BUILDKIT=1 docker build --platform linux/amd64 \
 		--build-arg "REPO_URL=$(REPO_URL)" \
 		--build-arg "GIT_DEPTH=$(GIT_DEPTH)" \
 		--build-arg "SOURCE_REV=$(SOURCE_REV)" \

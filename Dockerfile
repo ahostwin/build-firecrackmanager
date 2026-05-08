@@ -47,7 +47,12 @@ RUN mkdir -p /build \
 
 ENV CGO_ENABLED=1
 
-RUN cd /src && go build -trimpath -ldflags='-s -w' -o /build/firecrackmanager ./cmd/firecrackmanager
+# Persist Go module + build caches across SOURCE_REV bumps (requires BuildKit).
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    cd /src \
+    && go mod download \
+    && go build -trimpath -ldflags='-s -w' -o /build/firecrackmanager ./cmd/firecrackmanager
 
 FROM --platform=linux/amd64 debian:bookworm-slim AS packager
 
