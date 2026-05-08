@@ -1,7 +1,8 @@
+# Build files
 /dist/
-/.specstory/
-/.cursor/
 
 # Editor / IDE
 .vscode/
 .cursorindexingignore
+/.cursor/
+/.specstory/
